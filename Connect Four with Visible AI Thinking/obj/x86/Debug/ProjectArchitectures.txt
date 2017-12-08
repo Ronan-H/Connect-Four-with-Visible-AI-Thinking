@@ -1,0 +1,1 @@
+C:\Users\borme\Documents\VisualStudioProjects\Connect Four with Visible AI Thinking\Connect Four with Visible AI Thinking\Connect Four with Visible AI Thinking.csproj;x86

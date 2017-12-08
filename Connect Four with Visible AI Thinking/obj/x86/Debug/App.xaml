@@ -1,0 +1,9 @@
+﻿<Application
+    x:Class="Connect_Four_with_Visible_AI_Thinking.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Connect_Four_with_Visible_AI_Thinking"
+    RequestedTheme="Light">
+
+</Application>
+
