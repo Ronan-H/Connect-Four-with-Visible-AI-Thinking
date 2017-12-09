@@ -7,8 +7,15 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    </Grid>
+    <StackPanel x:ConnectionId='1' x:Name="rootPanel" Orientation="Horizontal" Margin="20" Background="Yellow">
+        <StackPanel x:ConnectionId='2' x:Name="settingsPanel" Orientation="Vertical" Background="Red">
+
+        </StackPanel>
+
+        <Grid x:ConnectionId='3' x:Name="boardGrid" Background="Blue">
+
+        </Grid>
+    </StackPanel>
 </Page>
 

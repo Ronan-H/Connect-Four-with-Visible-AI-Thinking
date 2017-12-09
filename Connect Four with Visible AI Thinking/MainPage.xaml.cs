@@ -26,5 +26,20 @@ namespace Connect_Four_with_Visible_AI_Thinking
         {
             this.InitializeComponent();
         }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            // setup the elements
+
+            // scale the board correctly
+            Loaded += delegate
+            {
+                boardGrid.Width = (rootPanel.ActualHeight / 6) * 7;
+                settingsPanel.Width = rootPanel.ActualWidth - boardGrid.Width;
+            };
+        }
+
     }
 }
