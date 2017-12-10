@@ -8,12 +8,12 @@
     mc:Ignorable="d">
 
 
-    <StackPanel x:Name="rootPanel" Orientation="Horizontal" Margin="20" Background="Yellow">
-        <StackPanel x:Name="settingsPanel" Orientation="Vertical" Background="Red">
+    <StackPanel x:Name="rootPanel" Orientation="Horizontal" Margin="20" Background="LightGray">
+        <StackPanel x:Name="settingsPanel" Orientation="Vertical" Background="Transparent">
 
         </StackPanel>
 
-        <Grid x:Name="boardGrid" Background="Blue">
+        <Grid x:Name="boardGrid" Background="Black">
 
         </Grid>
     </StackPanel>

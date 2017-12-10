@@ -8,12 +8,12 @@
     mc:Ignorable="d">
 
 
-    <StackPanel x:ConnectionId='1' x:Name="rootPanel" Orientation="Horizontal" Margin="20" Background="Yellow">
-        <StackPanel x:ConnectionId='2' x:Name="settingsPanel" Orientation="Vertical" Background="Red">
+    <StackPanel x:ConnectionId='1' x:Name="rootPanel" Orientation="Horizontal" Margin="20" Background="LightGray">
+        <StackPanel x:ConnectionId='2' x:Name="settingsPanel" Orientation="Vertical" Background="Transparent">
 
         </StackPanel>
 
-        <Grid x:ConnectionId='3' x:Name="boardGrid" Background="Blue">
+        <Grid x:ConnectionId='3' x:Name="boardGrid" Background="Black">
 
         </Grid>
     </StackPanel>
