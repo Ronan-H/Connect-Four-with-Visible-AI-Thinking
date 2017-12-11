@@ -13,7 +13,7 @@
 
         </StackPanel>
 
-        <Grid x:ConnectionId='3' x:Name="boardGrid" Background="Black">
+        <Grid x:ConnectionId='3' x:Name="boardGrid" Background="Black"                       >
 
         </Grid>
     </StackPanel>

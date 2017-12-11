@@ -31,6 +31,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
          */
         int[,] _board = new int[6, 7];
         Ellipse[,] _chips = new Ellipse[6, 7];
+        Color[] chipColors = {Colors.White, Colors.Red, Colors.Yellow};
 
         public MainPage()
         {
@@ -77,7 +78,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
                             border.Background = new SolidColorBrush(Colors.Blue);
 
                             Ellipse chip = new Ellipse();
-                            chip.Fill = new SolidColorBrush(Colors.White);
+                            chip.Fill = new SolidColorBrush(chipColors[0]);
                             chip.Width = (int)(borderSize * 0.8);
                             chip.Height = chip.Width;
 
@@ -98,6 +99,49 @@ namespace Connect_Four_with_Visible_AI_Thinking
                     setupDone = true;
                 }
             };
+        }
+
+        private void OnBoardTapped(object sender, TappedRoutedEventArgs e)
+        {
+            int column = (int) (e.GetPosition((UIElement) sender).X / (boardGrid.Width / 7));
+
+            if (!isColumnFull(column))
+            {
+                placeChip(1, column);
+                updateBoard();
+            }
+        }
+
+        private Boolean isColumnFull(int column)
+        {
+            return _board[0, column] != 0;
+        }
+
+        private void placeChip(int player, int column)
+        {
+            for (int i = 5; i >= 0; --i)
+            {
+                if (_board[i, column] == 0)
+                {
+                    _board[i, column] = player;
+                    return;
+                }
+            }
+        }
+
+        public void updateBoard()
+        {
+            for (int i = 0; i < 6; ++i)
+            {
+                for (int j = 0; j < 7; ++j)
+                {
+                    Color chipColor = chipColors[_board[i, j]];
+                    if ((_chips[i, j].Fill as SolidColorBrush).Color.Equals(chipColor) == false)
+                    {
+                        _chips[i, j].Fill = new SolidColorBrush(chipColor);
+                    }
+                }
+            }
         }
 
     }

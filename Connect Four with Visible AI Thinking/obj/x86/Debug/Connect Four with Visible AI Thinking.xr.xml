@@ -15,6 +15,7 @@
     </RootType>
     <RootType FullName="Windows.UI.Xaml.Controls.Grid">
       <RootProperty Name="Background" />
+      <RootEvent Name="Tapped" />
     </RootType>
     <RootType FullName="Connect_Four_with_Visible_AI_Thinking.MainPage" />
   </Roots.RootTypes>

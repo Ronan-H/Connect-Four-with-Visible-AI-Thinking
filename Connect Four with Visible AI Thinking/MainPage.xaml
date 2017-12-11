@@ -13,7 +13,7 @@
 
         </StackPanel>
 
-        <Grid x:Name="boardGrid" Background="Black">
+        <Grid x:Name="boardGrid" Background="Black" Tapped="OnBoardTapped">
 
         </Grid>
     </StackPanel>
