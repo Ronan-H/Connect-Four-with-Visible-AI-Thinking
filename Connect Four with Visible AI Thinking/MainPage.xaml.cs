@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
@@ -32,6 +33,13 @@ namespace Connect_Four_with_Visible_AI_Thinking
         int[,] _board = new int[6, 7];
         Ellipse[,] _chips = new Ellipse[6, 7];
         Color[] chipColors = {Colors.White, Colors.Red, Colors.Yellow};
+
+        // 0 = game finished
+        // 1 = user's turn
+        // 2 = AI's turn
+        int _turn = 1;
+        int _searchDepth = 5;
+        int _bestMove = -1;
 
         public MainPage()
         {
@@ -103,18 +111,34 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
         private void OnBoardTapped(object sender, TappedRoutedEventArgs e)
         {
-            int column = (int) (e.GetPosition((UIElement) sender).X / (boardGrid.Width / 7));
-
-            if (!isColumnFull(column))
+            if (_turn == 1)
             {
-                placeChip(1, column);
-                updateBoard();
+                int column = (int)(e.GetPosition((UIElement)sender).X / (boardGrid.Width / 7));
+
+                if (!isColumnFull(column))
+                {
+                    placeChip(1, column);
+                    updateBoard();
+                }
+
+                _turn = 2;
+                doAiMove();
             }
         }
 
         private Boolean isColumnFull(int column)
         {
             return _board[0, column] != 0;
+        }
+
+        private Boolean isBoardFull()
+        {
+            for (int i = 0; i < 7; ++i)
+            {
+                if (!isColumnFull(i)) return false;
+            }
+
+            return true;
         }
 
         private void placeChip(int player, int column)
@@ -124,6 +148,20 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 if (_board[i, column] == 0)
                 {
                     _board[i, column] = player;
+                    return;
+                }
+            }
+        }
+
+
+        // Remove the top most chip from a column.;
+        private void removeChip(int column)
+        {
+            for (int i = 0; i < 6; ++i)
+            {
+                if (_board[i, column] != 0)
+                {
+                    _board[i, column] = 0;
                     return;
                 }
             }
@@ -142,6 +180,174 @@ namespace Connect_Four_with_Visible_AI_Thinking
                     }
                 }
             }
+        }
+
+        private void doAiMove()
+        {
+            minMax(_searchDepth, true);
+            placeChip(2, _bestMove);
+            updateBoard();
+            _turn = 1;
+        }
+
+        /* Finds how good the board is for the AI.
+         * This is how terminal MinMax nodes are evaluated.
+         * A value of >0 indicates the AI is winning.
+         * A value of <0 indicates the player is winning.
+         * A value of 0 indicates a tied board state.
+         */
+        private int getBoardEvaluation()
+        {
+            return getPlayerChipsValue(2) - getPlayerChipsValue(1);
+        }
+
+        private int minMax(int depth, Boolean maximizingPlayer)
+        {
+            if (depth == 0 || isGameWon() || isBoardFull())
+                return getBoardEvaluation();
+
+            if (maximizingPlayer)
+            {
+                int bestValue = Int32.MinValue;
+
+                for (int i = 0; i < 7; ++i)
+                {
+                    if (!isColumnFull(i)) {
+                        placeChip(2, i);
+                        int value = minMax(depth - 1, false);
+                        if (value > bestValue)
+                        {
+                            value = bestValue;
+                            _bestMove = i;
+                        }
+                        removeChip(i);
+                    }
+                }
+
+                return bestValue;
+            }
+            else
+            {
+                // Minimizing player
+                int bestValue = Int32.MaxValue;
+                
+                for (int i = 0; i < 7; ++i)
+                {
+                    if (!isColumnFull(i))
+                    {
+                        placeChip(1, i);
+                        int value = minMax(depth - 1, true);
+                        bestValue = Math.Min(bestValue, value);
+                        removeChip(i);
+                    }
+                }
+
+                return bestValue;
+            }
+        }
+
+        /* The offsets used when checking for potential 4-in-a-rows.
+             * 
+             * In this order:
+             * Going...
+             * - up, left
+             * - up
+             * - up, right
+             * - right
+             */
+        int[,] _offsets = new int[,]
+        {
+                {-1, -1},
+                {0, -1},
+                {1, -1},
+                {1, 0}
+        };
+        private int getPlayerChipsValue(int player)
+        {
+            /* Evaluation method:
+             * 
+             * -> 0 points for 0 in a row
+             * -> 1 point for 1 in a row
+             * -> 4 points for 2 in a row
+             * -> 9 points for 3 in a row
+             * -> infinte points for 4 in a row
+             * 
+             * Only chips with potential to be part of a four-in-a-row
+             * will add value.
+             * 
+             * Chips with potential to be part of a four-in-a-row in multiple
+             * directions will be counted multiple times.
+             * 
+             * Potential future improvement: less value given to potential four-in-a-rows
+             * who need chips below them first (since they are harder to build).
+             */
+
+            int value = 0;
+            
+            int[] rewards = {0, 1, 4, 9, Int32.MaxValue};
+            int otherPlayer = (player == 1 ? 2 : 1);
+
+            for (int y = 0; y < 6; ++y)
+            {
+                for (int x = 0; x < 7; ++x)
+                {
+                    // Check each direction for a potential 4-in-a-row
+                    for (int off = 0; off < _offsets.GetLength(0); ++off)
+                    {
+                        if (!inBounds(x + _offsets[off, 0] * 3, y + _offsets[off, 1] * 3))
+                        {
+                            continue;
+                        }
+
+                        /* The number of chips the player owns in this potential
+                         * 4-in-a-row.
+                         */
+                        int playerChips = 0;
+                        for (int offLen = 0; offLen < _offsets.GetLength(0); ++offLen)
+                        {
+                            int currentChip = _board[y + _offsets[off, 1] * offLen, x + _offsets[off, 0] * offLen];
+
+                            if (currentChip == otherPlayer)
+                            {
+                                /* The other player has a chip, so this player
+                                 * cannot get a 4-in-a-row here.
+                                 */
+                                goto endOffsetLoop;
+                            }
+
+                            if (currentChip == player)
+                            {
+                                ++playerChips;
+                            }
+                        }
+                        
+                        if (playerChips == 4)
+                        {
+                            return rewards[4];
+                        }
+                        else
+                        {
+                            value += rewards[playerChips];
+                        }
+
+                        endOffsetLoop:;
+                    }
+                }
+            }
+
+            return value;
+        }
+
+        private Boolean inBounds(int x, int y)
+        {
+            return x >= 0 && x <= 6
+                && y >= 0 && y <= 5;
+        }
+
+        public Boolean isGameWon()
+        {
+            return getPlayerChipsValue(1) == Int32.MaxValue
+                || getPlayerChipsValue(2) == Int32.MaxValue;
         }
 
     }
