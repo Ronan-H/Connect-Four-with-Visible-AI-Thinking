@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -38,7 +39,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
         // 1 = user's turn
         // 2 = AI's turn
         int _turn = 1;
-        int _searchDepth = 5;
+        int _searchDepth = 4;
         int _bestMove = -1;
 
         public MainPage()
@@ -184,7 +185,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
         private void doAiMove()
         {
-            minMax(_searchDepth, true);
+            minMax(true, _searchDepth, true);
             placeChip(2, _bestMove);
             updateBoard();
             _turn = 1;
@@ -201,7 +202,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
             return getPlayerChipsValue(2) - getPlayerChipsValue(1);
         }
 
-        private int minMax(int depth, Boolean maximizingPlayer)
+        private int minMax(Boolean topLevel, int depth, Boolean maximizingPlayer)
         {
             if (depth == 0 || isGameWon() || isBoardFull())
                 return getBoardEvaluation();
@@ -214,11 +215,15 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 {
                     if (!isColumnFull(i)) {
                         placeChip(2, i);
-                        int value = minMax(depth - 1, false);
+                        int value = minMax(false, depth - 1, false);
+                        if (topLevel) Debug.WriteLine("Col: " + i + " Value: " + value);
                         if (value > bestValue)
                         {
-                            value = bestValue;
-                            _bestMove = i;
+                            bestValue = value;
+                            if (topLevel)
+                            {
+                                _bestMove = i;
+                            }
                         }
                         removeChip(i);
                     }
@@ -236,7 +241,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
                     if (!isColumnFull(i))
                     {
                         placeChip(1, i);
-                        int value = minMax(depth - 1, true);
+                        int value = minMax(false, depth - 1, true);
                         bestValue = Math.Min(bestValue, value);
                         removeChip(i);
                     }
@@ -303,7 +308,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
                          * 4-in-a-row.
                          */
                         int playerChips = 0;
-                        for (int offLen = 0; offLen < _offsets.GetLength(0); ++offLen)
+                        for (int offLen = 0; offLen < 4; ++offLen)
                         {
                             int currentChip = _board[y + _offsets[off, 1] * offLen, x + _offsets[off, 0] * offLen];
 
@@ -334,14 +339,14 @@ namespace Connect_Four_with_Visible_AI_Thinking
                     }
                 }
             }
-
+            
             return value;
         }
 
         private Boolean inBounds(int x, int y)
         {
-            return x >= 0 && x <= 6
-                && y >= 0 && y <= 5;
+            return x >= 0 && x < 7
+                && y >= 0 && y < 6;
         }
 
         public Boolean isGameWon()
