@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -32,14 +35,14 @@ namespace Connect_Four_with_Visible_AI_Thinking
          * 2 -> yellow chip
          */
         int[,] _board = new int[6, 7];
-        Ellipse[,] _chips = new Ellipse[6, 7];
+        Chip[,] _chips = new Chip[6, 7];
         Color[] chipColors = {Colors.White, Colors.Red, Colors.Yellow};
 
         // 0 = game finished
         // 1 = user's turn
         // 2 = AI's turn
         int _turn = 1;
-        int _searchDepth = 4;
+        int _searchDepth = 5;
         int _bestMove = -1;
 
         public MainPage()
@@ -87,11 +90,15 @@ namespace Connect_Four_with_Visible_AI_Thinking
                             border.Background = new SolidColorBrush(Colors.Blue);
 
                             Ellipse chip = new Ellipse();
-                            chip.Fill = new SolidColorBrush(chipColors[0]);
+                            Binding binding = new Binding();
+                            _chips[i, j] = new Chip(new SolidColorBrush(chipColors[0]));
+                            binding.Source = _chips[i, j];
+                            binding.Path = new PropertyPath("ChipChanged");
+                            binding.Mode = BindingMode.OneWay;
+                            BindingOperations.SetBinding(chip, Ellipse.FillProperty, binding);
                             chip.Width = (int)(borderSize * 0.8);
                             chip.Height = chip.Width;
 
-                            _chips[i, j] = chip;
                             _board[i, j] = 0;
 
                             border.SetValue(Grid.RowProperty, i);
@@ -110,7 +117,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
             };
         }
 
-        private void OnBoardTapped(object sender, TappedRoutedEventArgs e)
+        private async void OnBoardTapped(object sender, TappedRoutedEventArgs e)
         {
             if (_turn == 1)
             {
@@ -119,11 +126,11 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 if (!isColumnFull(column))
                 {
                     placeChip(1, column);
-                    updateBoard();
+                    await updateBoard();
+                    _turn = 2;
+                    await Task.Run(() => doAiMove());
+                    await updateBoard();
                 }
-
-                _turn = 2;
-                doAiMove();
             }
         }
 
@@ -167,27 +174,32 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 }
             }
         }
+        
+        
 
-        public void updateBoard()
+        public async Task updateBoard()
         {
             for (int i = 0; i < 6; ++i)
             {
                 for (int j = 0; j < 7; ++j)
                 {
                     Color chipColor = chipColors[_board[i, j]];
-                    if ((_chips[i, j].Fill as SolidColorBrush).Color.Equals(chipColor) == false)
+
+                    await Window.Current.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        _chips[i, j].Fill = new SolidColorBrush(chipColor);
-                    }
+                        if ((_chips[i, j]._color).Color.Equals(chipColor) == false)
+                        {
+                            _chips[i, j].ChipChanged = new SolidColorBrush(chipColor);
+                        }
+                    });
                 }
             }
         }
 
-        private void doAiMove()
+        private async Task doAiMove()
         {
             minMax(true, _searchDepth, true);
             placeChip(2, _bestMove);
-            updateBoard();
             _turn = 1;
         }
 
@@ -204,8 +216,27 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
         private int minMax(Boolean topLevel, int depth, Boolean maximizingPlayer)
         {
-            if (depth == 0 || isGameWon() || isBoardFull())
+            if (depth == 0 || isBoardFull())
+            {
                 return getBoardEvaluation();
+            }
+            else
+            {
+                /* This is laid out so that the boards aren't
+                 * evaluated twice if the game is won.
+                 * 
+                 * (i.e. checking isGameWon() then returning getBoardEvaluation()
+                 * is very inefficient; the game state is evaluated twice)
+                 */
+
+                int playerValue = getPlayerChipsValue(1);
+                int aiValue = getPlayerChipsValue(2);
+
+                if (Math.Abs(playerValue) == Int32.MaxValue || Math.Abs(aiValue) == Int32.MaxValue)
+                {
+                    return aiValue - playerValue;
+                }
+            }
 
             if (maximizingPlayer)
             {
@@ -217,7 +248,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
                         placeChip(2, i);
                         int value = minMax(false, depth - 1, false);
                         if (topLevel) Debug.WriteLine("Col: " + i + " Value: " + value);
-                        if (value > bestValue)
+                        if (value >= bestValue)
                         {
                             bestValue = value;
                             if (topLevel)
@@ -351,8 +382,8 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
         public Boolean isGameWon()
         {
-            return getPlayerChipsValue(1) == Int32.MaxValue
-                || getPlayerChipsValue(2) == Int32.MaxValue;
+            return getPlayerChipsValue(2) == Int32.MaxValue
+                || getPlayerChipsValue(1) == Int32.MaxValue;
         }
 
     }
