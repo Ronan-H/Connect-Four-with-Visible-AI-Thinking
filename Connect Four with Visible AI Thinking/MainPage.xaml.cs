@@ -42,15 +42,16 @@ namespace Connect_Four_with_Visible_AI_Thinking
         // 1 = user's turn
         // 2 = AI's turn
         int _turn = 1;
-        int _searchDepth = 5;
+        int _searchDepth = 4;
         int _bestMove = -1;
+        bool _updatingBoard;
 
         public MainPage()
         {
             this.InitializeComponent();
         }
 
-        Boolean setupDone = false;
+        bool setupDone = false;
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -134,12 +135,12 @@ namespace Connect_Four_with_Visible_AI_Thinking
             }
         }
 
-        private Boolean isColumnFull(int column)
+        private bool isColumnFull(int column)
         {
             return _board[0, column] != 0;
         }
 
-        private Boolean isBoardFull()
+        private bool isBoardFull()
         {
             for (int i = 0; i < 7; ++i)
             {
@@ -179,21 +180,30 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
         public async Task updateBoard()
         {
+            Debug.WriteLine("Start of update");
             for (int i = 0; i < 6; ++i)
             {
                 for (int j = 0; j < 7; ++j)
                 {
                     Color chipColor = chipColors[_board[i, j]];
 
-                    await Window.Current.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    try
                     {
-                        if ((_chips[i, j]._color).Color.Equals(chipColor) == false)
+                        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            _chips[i, j].ChipChanged = new SolidColorBrush(chipColor);
-                        }
-                    });
+                            if ((_chips[i, j]._color).Color.Equals(chipColor) == false)
+                            {
+                                _chips[i, j].ChipChanged = new SolidColorBrush(chipColor);
+                            }
+                        });
+                    }
+                    catch (Exception e) { }
+                    
                 }
             }
+
+            Debug.WriteLine("End of update");
+            _updatingBoard = false;
         }
 
         private async Task doAiMove()
@@ -214,7 +224,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
             return getPlayerChipsValue(2) - getPlayerChipsValue(1);
         }
 
-        private int minMax(Boolean topLevel, int depth, Boolean maximizingPlayer)
+        private int minMax(bool topLevel, int depth, bool maximizingPlayer)
         {
             if (depth == 0 || isBoardFull())
             {
@@ -246,6 +256,9 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 {
                     if (!isColumnFull(i)) {
                         placeChip(2, i);
+                        Task.Run(() => updateBoard()).Wait();
+                        Task.Delay(10).Wait();
+                        Debug.WriteLine("After run");
                         int value = minMax(false, depth - 1, false);
                         if (topLevel) Debug.WriteLine("Col: " + i + " Value: " + value);
                         if (value >= bestValue)
@@ -374,13 +387,13 @@ namespace Connect_Four_with_Visible_AI_Thinking
             return value;
         }
 
-        private Boolean inBounds(int x, int y)
+        private bool inBounds(int x, int y)
         {
             return x >= 0 && x < 7
                 && y >= 0 && y < 6;
         }
 
-        public Boolean isGameWon()
+        public bool isGameWon()
         {
             return getPlayerChipsValue(2) == Int32.MaxValue
                 || getPlayerChipsValue(1) == Int32.MaxValue;
