@@ -11,6 +11,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
 using Windows.UI.Core;
+using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -42,9 +43,10 @@ namespace Connect_Four_with_Visible_AI_Thinking
         // 1 = user's turn
         // 2 = AI's turn
         int _turn = 1;
-        int _searchDepth = 4;
+        int _searchDepth = 3;
         int _aiSleepDelay = 10;
         bool _showAIThinking = true;
+        bool _showAIColVals = true;
         int _bestMove = -1;
 
         public MainPage()
@@ -215,6 +217,18 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
         private async Task doAiMove()
         {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                for (int i = 0; i < boardGrid.Children.Count; ++i)
+                {
+                    if (boardGrid.Children.ElementAt(i) is TextBlock)
+                    {
+                        boardGrid.Children.RemoveAt(i);
+                        i = 0;
+                    }
+                }
+            });
+
             minMax(true, _searchDepth, true);
             placeChip(2, _bestMove);
             _turn = 1;
@@ -228,11 +242,32 @@ namespace Connect_Four_with_Visible_AI_Thinking
          */
         private int getBoardEvaluation()
         {
-            return getPlayerChipsValue(2) - getPlayerChipsValue(1);
+            int p1Chips = getPlayerChipsValue(1);
+            int p2Chips = getPlayerChipsValue(2);
+
+            if (p1Chips == Int32.MaxValue)
+            {
+                return Int32.MinValue;
+            }
+            else if (p2Chips == Int32.MaxValue)
+            {
+                return Int32.MaxValue;
+            }
+            else
+            {
+                return getPlayerChipsValue(2) - getPlayerChipsValue(1);
+            }
         }
 
         private int minMax(bool topLevel, int depth, bool maximizingPlayer)
         {
+            if (_showAIThinking)
+            {
+                Task.Run(() => updateBoard()).Wait();
+                Task.Delay(_aiSleepDelay).Wait();
+                Debug.WriteLine("After run");
+            }
+
             if (depth == 0 || isBoardFull())
             {
                 return getBoardEvaluation();
@@ -251,7 +286,14 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
                 if (Math.Abs(playerValue) == Int32.MaxValue || Math.Abs(aiValue) == Int32.MaxValue)
                 {
-                    return aiValue - playerValue;
+                    if (playerValue == Int32.MaxValue)
+                    {
+                        return Int32.MinValue;
+                    }
+                    else
+                    {
+                        return Int32.MaxValue;
+                    }
                 }
             }
 
@@ -263,14 +305,43 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 {
                     if (!isColumnFull(i)) {
                         placeChip(2, i);
-                        if (_showAIThinking)
-                        {
-                            Task.Run(() => updateBoard()).Wait();
-                            Task.Delay(_aiSleepDelay).Wait();
-                            Debug.WriteLine("After run");
-                        }
                         int value = minMax(false, depth - 1, false);
-                        if (topLevel) Debug.WriteLine("Col: " + i + " Value: " + value);
+                        if (topLevel)
+                        {
+
+                            if (_showAIColVals)
+                            {
+                                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                                {
+                                    Debug.WriteLine("Col: " + i + " Value: " + value);
+                                    TextBlock colValue = new TextBlock();
+                                    colValue.HorizontalAlignment = HorizontalAlignment.Center;
+                                    colValue.VerticalAlignment = VerticalAlignment.Top;
+                                    colValue.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
+                                    colValue.FontSize = 24;
+                                    colValue.Foreground = new SolidColorBrush(Colors.Red);
+
+                                    string valText;
+                                    if (value == Int32.MaxValue)
+                                    {
+                                        valText = "+Inf";
+                                    }
+                                    else if (value == Int32.MinValue)
+                                    {
+                                        valText = "-Inf";
+                                    }
+                                    else
+                                    {
+                                        valText = Convert.ToString(value);
+                                    }
+
+                                    colValue.Text = valText;
+                                    colValue.SetValue(Grid.RowProperty, 0);
+                                    colValue.SetValue(Grid.ColumnProperty, i);
+                                    boardGrid.Children.Add(colValue);
+                                }).AsTask().Wait();
+                            }
+                        }
                         if (value >= bestValue)
                         {
                             bestValue = value;
@@ -429,6 +500,28 @@ namespace Connect_Four_with_Visible_AI_Thinking
         private void ShowThinkingCheckbox_Unchecked(object sender, RoutedEventArgs e)
         {
             _showAIThinking = false;
+        }
+
+        private void ShowColVals_Checked(object sender, RoutedEventArgs e)
+        {
+            _showAIColVals = true;
+        }
+
+        private async void ShowColVals_Unchecked(object sender, RoutedEventArgs e)
+        {
+            _showAIColVals = false;
+
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                for (int i = 0; i < boardGrid.Children.Count; ++i)
+                {
+                    if (boardGrid.Children.ElementAt(i) is TextBlock)
+                    {
+                        boardGrid.Children.RemoveAt(i);
+                        i = 0;
+                    }
+                }
+            });
         }
     }
 }

@@ -10,9 +10,10 @@
 
     <StackPanel x:Name="rootPanel" Orientation="Horizontal" Margin="20" Background="LightGray">
         <StackPanel x:Name="settingsPanel" Orientation="Vertical" Background="Transparent" Padding="5">
-            <Slider x:Name="SearchDepthSlider" Header="Search Depth" Width="100" Minimum="1" Maximum="6" Value="4" TickFrequency="1" ValueChanged="SearchDepthSlider_ValueChanged" />
+            <Slider x:Name="SearchDepthSlider" Header="Search Depth" Width="100" Minimum="1" Maximum="6" Value="3" TickFrequency="1" ValueChanged="SearchDepthSlider_ValueChanged" />
             <CheckBox x:Name="ShowThinkingCheckbox" Content="Show AI Thinking" IsChecked="True" Checked="ShowThinkingCheckbox_Checked" Unchecked="ShowThinkingCheckbox_Unchecked" />
-            <Slider x:Name="StateDelaySlider" Header="AI State Eval Sleep Delay (ms)" Width="100" Minimum="0" Maximum="100" Value="10" TickFrequency="1" ValueChanged="StateDelaySlider_ValueChanged" />
+            <Slider x:Name="StateDelaySlider" Header="AI State Eval Sleep Delay (ms)" Width="100" Minimum="0" Maximum="250" Value="10" TickFrequency="1" ValueChanged="StateDelaySlider_ValueChanged" />
+            <CheckBox x:Name="ShowColVals" Content="Show AI Column Values" IsChecked="True" Checked="ShowColVals_Checked"  Unchecked="ShowColVals_Unchecked" />
             <StackPanel Orientation="Horizontal">
                 <TextBlock x:Name="StatusText1" FontSize="20" Text="Status: " Foreground="Black" />
                 <TextBox x:Name="StatusText2" FontSize="20" Text="Your turn" Foreground="Red" Background="Black" IsReadOnly="True" />
