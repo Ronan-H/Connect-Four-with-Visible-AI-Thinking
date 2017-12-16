@@ -43,8 +43,9 @@ namespace Connect_Four_with_Visible_AI_Thinking
         // 2 = AI's turn
         int _turn = 1;
         int _searchDepth = 4;
+        int _aiSleepDelay = 10;
+        bool _showAIThinking = true;
         int _bestMove = -1;
-        bool _updatingBoard;
 
         public MainPage()
         {
@@ -128,9 +129,16 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 {
                     placeChip(1, column);
                     await updateBoard();
+
+                    StatusText2.Text = "AI is thinking...";
+                    StatusText2.Foreground = new SolidColorBrush(Colors.Yellow);
+
                     _turn = 2;
                     await Task.Run(() => doAiMove());
                     await updateBoard();
+
+                    StatusText2.Text = "Your turn";
+                    StatusText2.Foreground = new SolidColorBrush(Colors.Red);
                 }
             }
         }
@@ -203,7 +211,6 @@ namespace Connect_Four_with_Visible_AI_Thinking
             }
 
             Debug.WriteLine("End of update");
-            _updatingBoard = false;
         }
 
         private async Task doAiMove()
@@ -256,9 +263,12 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 {
                     if (!isColumnFull(i)) {
                         placeChip(2, i);
-                        Task.Run(() => updateBoard()).Wait();
-                        Task.Delay(10).Wait();
-                        Debug.WriteLine("After run");
+                        if (_showAIThinking)
+                        {
+                            Task.Run(() => updateBoard()).Wait();
+                            Task.Delay(_aiSleepDelay).Wait();
+                            Debug.WriteLine("After run");
+                        }
                         int value = minMax(false, depth - 1, false);
                         if (topLevel) Debug.WriteLine("Col: " + i + " Value: " + value);
                         if (value >= bestValue)
@@ -399,5 +409,26 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 || getPlayerChipsValue(1) == Int32.MaxValue;
         }
 
+        private void SearchDepthSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            Slider depthSlider = (Slider)sender;
+            _searchDepth = (int) depthSlider.Value;
+        }
+
+        private void StateDelaySlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            Slider delaySlider = (Slider)sender;
+            _aiSleepDelay = (int)delaySlider.Value;
+        }
+
+        private void ShowThinkingCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            _showAIThinking = true;
+        }
+
+        private void ShowThinkingCheckbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            _showAIThinking = false;
+        }
     }
 }
