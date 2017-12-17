@@ -48,6 +48,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
         bool _showAIThinking = true;
         bool _showAIColVals = true;
         int _bestMove = -1;
+        TextBlock _prevBestVal = null;
 
         public MainPage()
         {
@@ -196,21 +197,21 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 for (int j = 0; j < 7; ++j)
                 {
                     Color chipColor = chipColors[_board[i, j]];
-
-                    try
+                    
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        if ((_chips[i, j]._color).Color.Equals(chipColor) == false)
                         {
-                            if ((_chips[i, j]._color).Color.Equals(chipColor) == false)
-                            {
-                                _chips[i, j].ChipChanged = new SolidColorBrush(chipColor);
-                            }
-                        });
-                    }
-                    catch (Exception e) { }
+                            _chips[i, j].ChipChanged = new SolidColorBrush(chipColor);
+
+                            // assume only 1 chip changed
+                            return;
+                        }
+                    });
                     
                 }
             }
+
 
             Debug.WriteLine("End of update");
         }
@@ -219,6 +220,9 @@ namespace Connect_Four_with_Visible_AI_Thinking
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
+                // disallow the user from clearing the board while minmax is running
+                RestartButton.IsEnabled = false;
+
                 for (int i = 0; i < boardGrid.Children.Count; ++i)
                 {
                     if (boardGrid.Children.ElementAt(i) is TextBlock)
@@ -232,6 +236,11 @@ namespace Connect_Four_with_Visible_AI_Thinking
             minMax(true, _searchDepth, true);
             placeChip(2, _bestMove);
             _turn = 1;
+
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                RestartButton.IsEnabled = true;
+            });
         }
 
         /* Finds how good the board is for the AI.
@@ -316,10 +325,29 @@ namespace Connect_Four_with_Visible_AI_Thinking
                                     Debug.WriteLine("Col: " + i + " Value: " + value);
                                     TextBlock colValue = new TextBlock();
                                     colValue.HorizontalAlignment = HorizontalAlignment.Center;
-                                    colValue.VerticalAlignment = VerticalAlignment.Top;
+                                    colValue.VerticalAlignment = VerticalAlignment.Center;
                                     colValue.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
                                     colValue.FontSize = 24;
-                                    colValue.Foreground = new SolidColorBrush(Colors.Red);
+
+                                    Color foregroundColor;
+
+                                    if (value >= bestValue)
+                                    {
+                                        foregroundColor = Colors.Green;
+
+                                        if (i != 0)
+                                        {
+                                            _prevBestVal.Foreground = new SolidColorBrush(Colors.Red);
+                                        }
+
+                                        _prevBestVal = colValue;
+                                    }
+                                    else
+                                    {
+                                        foregroundColor = Colors.Red;
+                                    }
+
+                                    colValue.Foreground = new SolidColorBrush(foregroundColor);
 
                                     string valText;
                                     if (value == Int32.MaxValue)
@@ -522,6 +550,32 @@ namespace Connect_Four_with_Visible_AI_Thinking
                     }
                 }
             });
+        }
+
+        private void RestartButton_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            // clear board
+            for (int y = 0; y < 6; ++y)
+            {
+                for (int x = 0; x < 7; ++x)
+                {
+                    _board[y, x] = 0;
+                }
+            }
+
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                for (int i = 0; i < boardGrid.Children.Count; ++i)
+                {
+                    if (boardGrid.Children.ElementAt(i) is TextBlock)
+                    {
+                        boardGrid.Children.RemoveAt(i);
+                        i = 0;
+                    }
+                }
+            });
+
+            updateBoard();
         }
     }
 }

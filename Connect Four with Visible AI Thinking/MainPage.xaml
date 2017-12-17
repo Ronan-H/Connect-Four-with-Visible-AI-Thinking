@@ -18,6 +18,7 @@
                 <TextBlock x:Name="StatusText1" FontSize="20" Text="Status: " Foreground="Black" />
                 <TextBox x:Name="StatusText2" FontSize="20" Text="Your turn" Foreground="Red" Background="Black" IsReadOnly="True" />
             </StackPanel>
+            <Button x:Name="RestartButton" Content="Restart (clear board)" Tapped="RestartButton_Tapped" />
         </StackPanel>
 
         <Grid x:Name="boardGrid" Background="Black" Tapped="OnBoardTapped">
