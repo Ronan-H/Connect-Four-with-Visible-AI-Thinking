@@ -12,6 +12,7 @@ using Windows.Foundation.Collections;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Text;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -124,7 +125,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
         private async void OnBoardTapped(object sender, TappedRoutedEventArgs e)
         {
-            if (_turn == 1)
+            if (_turn == 1 && !isGameWon())
             {
                 int column = (int)(e.GetPosition((UIElement)sender).X / (boardGrid.Width / 7));
 
@@ -133,15 +134,31 @@ namespace Connect_Four_with_Visible_AI_Thinking
                     placeChip(1, column);
                     await updateBoard();
 
-                    StatusText2.Text = "AI is thinking...";
-                    StatusText2.Foreground = new SolidColorBrush(Colors.Yellow);
+                    if (isGameWon())
+                    {
+                        StatusText2.Foreground = new SolidColorBrush(Colors.White);
+                        StatusText2.Text = "You Won!";
+                    }
+                    else
+                    {
+                        StatusText2.Foreground = new SolidColorBrush(Colors.Yellow);
+                        StatusText2.Text = "AI is thinking...";
 
-                    _turn = 2;
-                    await Task.Run(() => doAiMove());
-                    await updateBoard();
+                        _turn = 2;
+                        await Task.Run(() => doAiMove());
+                        await updateBoard();
 
-                    StatusText2.Text = "Your turn";
-                    StatusText2.Foreground = new SolidColorBrush(Colors.Red);
+                        if (isGameWon())
+                        {
+                            StatusText2.Foreground = new SolidColorBrush(Colors.White);
+                            StatusText2.Text = "You Lost!";
+                        }
+                        else
+                        {
+                            StatusText2.Foreground = new SolidColorBrush(Colors.Red);
+                            StatusText2.Text = "Your turn";
+                        }
+                    }
                 }
             }
         }
@@ -573,6 +590,9 @@ namespace Connect_Four_with_Visible_AI_Thinking
                         i = 0;
                     }
                 }
+
+                StatusText2.Foreground = new SolidColorBrush(Colors.Red);
+                StatusText2.Text = "Your turn";
             });
 
             updateBoard();
