@@ -48,6 +48,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
         int _aiSleepDelay = 10;
         bool _showAIThinking = true;
         bool _showAIColVals = true;
+        bool _usePruning = true;
         int _bestMove = -1;
         TextBlock _prevBestVal = null;
 
@@ -117,7 +118,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
                             boardGrid.Children.Add(chip);
                         }
                     }
-
+                    
                     setupDone = true;
                 }
             };
@@ -250,7 +251,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 }
             });
 
-            minMax(true, _searchDepth, true);
+            minMax(true, _searchDepth, Int32.MinValue, Int32.MaxValue, true);
             placeChip(2, _bestMove);
             _turn = 1;
 
@@ -285,7 +286,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
             }
         }
 
-        private int minMax(bool topLevel, int depth, bool maximizingPlayer)
+        private int minMax(bool topLevel, int depth, int alpha, int beta, bool maximizingPlayer)
         {
             if (_showAIThinking)
             {
@@ -331,7 +332,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 {
                     if (!isColumnFull(i)) {
                         placeChip(2, i);
-                        int value = minMax(false, depth - 1, false);
+                        int value = minMax(false, depth - 1, alpha, beta, false);
                         if (topLevel)
                         {
 
@@ -348,7 +349,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
                                     Color foregroundColor;
 
-                                    if (value >= bestValue)
+                                    if (value > bestValue || i == 0)
                                     {
                                         foregroundColor = Colors.Green;
 
@@ -369,11 +370,11 @@ namespace Connect_Four_with_Visible_AI_Thinking
                                     string valText;
                                     if (value == Int32.MaxValue)
                                     {
-                                        valText = "+Inf";
+                                        valText = "+ Inf";
                                     }
                                     else if (value == Int32.MinValue)
                                     {
-                                        valText = "-Inf";
+                                        valText = "- Inf";
                                     }
                                     else
                                     {
@@ -387,7 +388,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
                                 }).AsTask().Wait();
                             }
                         }
-                        if (value >= bestValue)
+                        if (value > bestValue || (topLevel && i == 0))
                         {
                             bestValue = value;
                             if (topLevel)
@@ -395,10 +396,20 @@ namespace Connect_Four_with_Visible_AI_Thinking
                                 _bestMove = i;
                             }
                         }
+                        
                         removeChip(i);
+
+                        alpha = Math.Max(alpha, bestValue);
+                        if (_usePruning)
+                        {
+                            if (alpha >= beta)
+                            {
+                                break;
+                            }
+                        }
                     }
                 }
-
+                  
                 return bestValue;
             }
             else
@@ -411,9 +422,18 @@ namespace Connect_Four_with_Visible_AI_Thinking
                     if (!isColumnFull(i))
                     {
                         placeChip(1, i);
-                        int value = minMax(false, depth - 1, true);
+                        int value = minMax(false, depth - 1, alpha, beta, true);
                         bestValue = Math.Min(bestValue, value);
                         removeChip(i);
+
+                        beta = Math.Min(beta, bestValue);
+                        if (_usePruning)
+                        {
+                            if (alpha >= beta)
+                            {
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -596,6 +616,16 @@ namespace Connect_Four_with_Visible_AI_Thinking
             });
 
             updateBoard();
+        }
+
+        private void UsePruningButton_Checked(object sender, RoutedEventArgs e)
+        {
+            _usePruning = true;
+        }
+
+        private void UsePruningButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            _usePruning = false;
         }
     }
 }
