@@ -71,7 +71,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 if (!setupDone)
                 {
                     boardGrid.Width = (rootPanel.ActualHeight / 6) * 7;
-                    settingsPanel.Width = rootPanel.ActualWidth - boardGrid.Width;
+                    settingsPanel.Width = Math.Max(rootPanel.ActualWidth - boardGrid.Width, 0);
 
                     int borderSize = (int)(boardGrid.Width / 7) - 2;
 
