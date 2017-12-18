@@ -50,6 +50,8 @@ namespace Connect_Four_with_Visible_AI_Thinking
         bool _showAIColVals = true;
         int _bestMove = -1;
         TextBlock _prevBestVal = null;
+        int _lowestColVal;
+        int _highestColVal;
 
         public MainPage()
         {
@@ -118,7 +120,9 @@ namespace Connect_Four_with_Visible_AI_Thinking
                         }
                     }
 
+                    
                     setupDone = true;
+                    updateBoard();
                 }
             };
         }
@@ -239,6 +243,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
             {
                 // disallow the user from clearing the board while minmax is running
                 RestartButton.IsEnabled = false;
+                ShowThinkingCheckbox.IsEnabled = false;
 
                 for (int i = 0; i < boardGrid.Children.Count; ++i)
                 {
@@ -250,13 +255,47 @@ namespace Connect_Four_with_Visible_AI_Thinking
                 }
             });
 
+            _lowestColVal = Int32.MaxValue;
+            _highestColVal = Int32.MinValue;
             minMax(true, _searchDepth, true);
+
+            if (_searchDepth != 0 && _lowestColVal == _highestColVal && (_lowestColVal == Int32.MaxValue || _lowestColVal == Int32.MinValue))
+            {
+                // All columns have value of +inf or -inf
+                /* Meaning with optimal play, a player is guaranteed a win
+                 * within <depth> moves. The AI will pick the last column.
+                 * This means it won't bother winning straight away if it's guaranteed
+                 * a win, and it won't bother trying to stop a player who is guaranteed a win
+                 * with optimal play.
+                 * 
+                 * Solution: redo minmax with depth of 1. Does not work every time.
+                 */
+
+                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    for (int i = 0; i < boardGrid.Children.Count; ++i)
+                    {
+                        if (boardGrid.Children.ElementAt(i) is TextBlock)
+                        {
+                            boardGrid.Children.RemoveAt(i);
+                            i = 0;
+                        }
+                    }
+
+                    StatusText2.Foreground = new SolidColorBrush(Colors.Red);
+                    StatusText2.Text = "Your turn";
+                }).AsTask().Wait();
+
+                minMax(true, 1, true);
+            }
+
             placeChip(2, _bestMove);
             _turn = 1;
 
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 RestartButton.IsEnabled = true;
+                ShowThinkingCheckbox.IsEnabled = true;
             });
         }
 
@@ -393,6 +432,9 @@ namespace Connect_Four_with_Visible_AI_Thinking
                             if (topLevel)
                             {
                                 _bestMove = i;
+
+                                _highestColVal = Math.Max(_highestColVal, bestValue);
+                                _lowestColVal = Math.Min(_lowestColVal, bestValue);
                             }
                         }
                         removeChip(i);
@@ -459,7 +501,7 @@ namespace Connect_Four_with_Visible_AI_Thinking
 
             int value = 0;
             
-            int[] rewards = {0, 1, 4, 9, Int32.MaxValue};
+            int[] rewards = {0, 1, 8, 27, Int32.MaxValue};
             int otherPlayer = (player == 1 ? 2 : 1);
 
             for (int y = 0; y < 6; ++y)

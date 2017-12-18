@@ -15,8 +15,8 @@
             <Slider x:Name="StateDelaySlider" Header="AI State Eval Sleep Delay (ms)" Width="100" Minimum="0" Maximum="250" Value="10" TickFrequency="1" ValueChanged="StateDelaySlider_ValueChanged" />
             <CheckBox x:Name="ShowColVals" Content="Show AI Column Values" IsChecked="True" Checked="ShowColVals_Checked"  Unchecked="ShowColVals_Unchecked" />
             <StackPanel Orientation="Horizontal">
-                <TextBlock x:Name="StatusText1" FontSize="20" Text="Status: " Foreground="Black" />
-                <TextBox x:Name="StatusText2" FontSize="20" Text="Your turn" Foreground="Red" Background="Black" IsReadOnly="True" />
+                <TextBlock x:Name="StatusText1" FontSize="22" Text="Status: " Foreground="Black" />
+                <TextBox x:Name="StatusText2" FontSize="22" Text="Your turn" Foreground="Red" Background="Black" IsReadOnly="True" />
             </StackPanel>
             <Button x:Name="RestartButton" Content="Restart (clear board)" Tapped="RestartButton_Tapped" HorizontalAlignment="Center" Margin="0,10,0,0" Background="Green" Foreground="White" FontWeight="Bold"/>
         </StackPanel>
