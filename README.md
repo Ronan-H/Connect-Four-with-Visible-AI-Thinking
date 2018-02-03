@@ -13,3 +13,6 @@ This shows the user how AI for these sort of games is made.
 
 ## What algorithm is used for the AI?
 The AI uses an algorithm known as MinMax. As it searches the game tree, it tries to maximize its "value" of the board while minimizing it's opponents value.
+
+## Now available on the Windows store!
+https://www.microsoft.com/en-us/store/p/connect-4-with-visible-ai-thinking/9n9ghdm29g8m
