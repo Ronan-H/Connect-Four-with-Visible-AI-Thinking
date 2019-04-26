@@ -7,7 +7,7 @@ A Connect Four game where you can see exactly what the AI opponent is thinking. 
 This is a Windows universal app created as an assignment for the Internet & Mobile Applications Development module in my Software Development college course.
 
 ## What does it do?
-In this app, you play Connect Four against an AI, with a twist: you can see what the AI is thinking for its move. You can see it searching through the game through and assigning values to game states.
+In this app, you play Connect Four against an AI, with a twist: you can see what the AI is thinking for its move. You can see it searching through the game tree and assigning values to game states.
 
 The app also has adjustible settings for search depth, how much delay there is between the AI's searched game states, and more.
 
