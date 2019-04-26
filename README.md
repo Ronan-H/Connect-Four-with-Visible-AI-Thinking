@@ -1,5 +1,5 @@
-# Connect-Four-with-Visible-AI-Thinking
-A Connect Four game where you can see exactly what the AI opponent is thinking.
+# Connect Four with Visible AI Thinking
+A Connect Four game where you can see exactly what the AI opponent is thinking. Made for a second year UWP assignment.
 
 ## What is this?
 This is a Windows universal app created as an assignment for the Internet & Mobile Applications Development module in my Software Development college course.
